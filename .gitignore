@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment and secrets
+.env
+.env.*
+.streamlit/secrets.toml
+
+# Datasets and model weights
+datasets/raw/
+datasets/processed/
+models/
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Temporary files
+outputs/
+*.log
+.DS_Store
+.ipynb_checkpoints/
