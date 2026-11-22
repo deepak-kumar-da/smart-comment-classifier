@@ -12,7 +12,7 @@ The system combines dedicated machine learning models, Natural Language Processi
 
 🌐 **Live Application:** (https://smart-comment-classifier.streamlit.app/)
 
-📂 **GitHub Repository:** [ADD YOUR GITHUB REPOSITORY URL]
+📂 **GitHub Repository:** https://github.com/deepak-kumar-da/smart-comment-classifier
 
 ---
 
