@@ -1,68 +1,74 @@
 # 🛡️ Smart Comment Classifier
-### AI-Powered Comment Moderation using Machine Learning, NLP & Generative AI
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-orange.svg)](https://pytorch.org/)
-[![Hugging Face](https://img.shields.io/badge/Models-Hugging%20Face-yellow.svg)](https://huggingface.co/)
-[![Streamlit](https://img.shields.io/badge/Deployment-Streamlit-red.svg)](https://streamlit.io/)
+### AI-Powered Comment Moderation | Machine Learning · NLP · Generative AI
 
-**Smart Comment Classifier** is an AI-assisted comment moderation platform designed to identify spam and potentially harmful content in user-generated comments.
+<p align="center">
+  <a href="https://smart-comment-classifier.streamlit.app/"><strong>🚀 Live Demo</strong></a> ·
+  <a href="https://github.com/deepak-kumar-da/smart-comment-classifier"><strong>📂 GitHub Repository</strong></a> ·
+  <a href="https://huggingface.co/siddhu915176"><strong>🤗 Hugging Face Models</strong></a>
+</p>
 
-The system combines dedicated machine learning models, Natural Language Processing (NLP), and a generative AI assistant to provide moderation predictions, confidence scores, explanations, and safer alternative wording.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python" />
+  <img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-orange?logo=pytorch" />
+  <img src="https://img.shields.io/badge/Hugging%20Face-Transformers-yellow?logo=huggingface" />
+  <img src="https://img.shields.io/badge/Streamlit-Deployed-red?logo=streamlit" />
+  <img src="https://img.shields.io/badge/Domain-ML%20%7C%20NLP%20%7C%20GenAI-purple" />
+</p>
 
-🌐 **Live Application:** (https://smart-comment-classifier.streamlit.app/)
+**Smart Comment Classifier** is an AI-assisted moderation platform that analyzes user-generated comments to identify spam and potentially harmful language.
 
-📂 **GitHub Repository:** https://github.com/deepak-kumar-da/smart-comment-classifier
+It combines dedicated deep-learning classification models with a generative AI assistant to deliver moderation predictions, category-level confidence scores, natural-language explanations, and safer alternative wording.
 
----
-
-## 📸 Application Preview
-
-<!-- Add your actual application screenshots inside the screenshots/ folder -->
-
-### Application Interface
-![Application Interface](screenshots/home.png)
-
-### Individual Comment Analysis
-![Comment Analysis](screenshots/comment_analysis.png)
-
-### Bulk Moderation
-![Bulk Moderation](screenshots/bulk_moderation.png)
+The platform supports both individual comment analysis and bulk CSV moderation through an interactive Streamlit application.
 
 ---
 
-## 🎯 Problem Statement
+## Table of Contents
 
-Online platforms receive large volumes of user-generated comments every day. Among these comments are spam messages, harassment, insults, threats, and other forms of harmful content.
-
-Manually reviewing every comment is time-consuming and difficult to scale.
-
-This project aims to build an intelligent moderation assistant that can:
-
-- Identify potentially unwanted spam comments.
-- Detect multiple categories of toxic language.
-- Provide prediction probabilities and moderation insights.
-- Generate understandable explanations using a language model.
-- Suggest more respectful alternatives to harmful comments.
-- Process multiple comments through CSV-based batch analysis.
-
-The system is designed as a decision-support tool rather than an automatic content-deletion system.
+- [Overview](#overview)
+- [Key Capabilities](#key-capabilities)
+- [System Architecture](#system-architecture)
+- [Model Performance](#model-performance)
+- [Datasets and Processing](#datasets-and-processing)
+- [Models and Resources](#models-and-resources)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+- [Repository Structure](#repository-structure)
+- [Responsible AI](#responsible-ai)
+- [Future Improvements](#future-improvements)
 
 ---
 
-## ✨ Key Features
+## Overview
+
+Online platforms receive enormous volumes of user-generated content. Identifying spam, harassment, insults, threats, and other harmful language is a challenging moderation task.
+
+Manual moderation can be time-consuming and difficult to scale.
+
+Smart Comment Classifier addresses this problem through a modular AI pipeline that combines:
+
+- **Spam classification:** Identifies potentially unwanted or promotional comments.
+- **Toxicity classification:** Detects six categories of potentially harmful language.
+- **Generative AI assistance:** Explains predictions and suggests safer alternative wording.
+- **Bulk moderation:** Processes multiple comments from CSV files.
+
+The application is designed as a moderation decision-support system. It assists human reviewers rather than automatically deleting comments or penalizing users.
+
+## Key Capabilities
 
 ### 1. Spam Detection
 
-A dedicated DistilBERT-based classification model identifies potentially unwanted or promotional content.
+A dedicated fine-tuned DistilBERT classifier identifies potentially unwanted or promotional content.
 
 - Binary spam classification.
 - Spam probability scores.
-- Dedicated model trained for spam detection.
+- Dedicated spam detection model.
+- Separate classification pipeline from toxicity detection.
 
 ### 2. Multi-Label Toxicity Detection
 
-A separate DistilBERT model identifies six toxicity categories:
+A separate fine-tuned DistilBERT model identifies six toxicity categories.
 
 | Category | Description |
 |---|---|
@@ -73,103 +79,96 @@ A separate DistilBERT model identifies six toxicity categories:
 | Insult | Insulting or demeaning language |
 | Identity Hate | Language targeting identity groups |
 
-The system uses category-specific optimized decision thresholds rather than applying one universal threshold to every category.
+The model uses category-specific optimized thresholds to account for differences between toxicity labels.
 
 ### 3. Generative AI Assistance
 
-Integrated with Google's FLAN-T5-base model.
-
-The AI assistant provides:
+Integrated with Google's **FLAN-T5-base**, the application provides:
 
 - Natural-language explanations of moderation results.
 - Contextual insights based on classifier predictions.
 - Suggested safer rewrites when harmful categories are detected.
 
-The generative model assists with explanations and rewriting. The dedicated classification models remain the source of moderation predictions.
+**Important:** The generative model assists with explanations and rewriting. The dedicated classification models remain responsible for the actual spam and toxicity predictions.
 
 ### 4. Individual Comment Analysis
 
-Users can submit a single comment and receive:
+Users can submit a comment and receive:
 
-- Spam classification.
-- Spam probability.
+- Spam classification and probability.
 - Six toxicity category probabilities.
-- Detected categories.
+- Detected toxicity categories.
 - Uncertainty indicators.
 - Human-review recommendations.
-- AI-generated explanation and suggested rewrite.
-- Downloadable analysis report.
+- AI-generated explanations and safer rewrites.
+- Downloadable analysis results.
 
 ### 5. Bulk CSV Moderation
 
-The application also supports multiple comments through CSV uploads.
+The application supports batch analysis of multiple comments.
 
 Users can:
 
 - Upload a CSV dataset.
 - Select the comment/text column.
 - Process multiple comments.
-- Review moderation results.
-- View summary statistics.
-- Export the complete moderation report.
+- Review individual moderation results.
+- Examine summary statistics.
+- Export the resulting moderation report.
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
-The project follows a modular architecture with two dedicated classification pipelines and an integrated generative AI assistant.
+The application follows a modular architecture with two dedicated classification pipelines and an integrated generative AI assistant.
 
 ```mermaid
 flowchart TD
-    A[User Input / CSV Upload] --> B[Text Processing]
+    A["User Input / CSV Upload"] --> B["Text Processing"]
 
-    B --> C[Spam Detection Model]
-    B --> D[Toxicity Detection Model]
+    B --> C["Spam Detection Model"]
+    B --> D["Toxicity Detection Model"]
 
-    C --> E[Spam Prediction]
-    D --> F[Six Toxicity Categories]
+    C --> E["Spam Prediction"]
+    D --> F["Six Toxicity Categories"]
 
-    E --> G[Moderation Results]
+    E --> G["Combined Moderation Results"]
     F --> G
 
-    G --> H[Thresholds and Uncertainty Assessment]
+    G --> H["Thresholds & Uncertainty Assessment"]
 
-    H --> I[FLAN-T5 AI Assistant]
+    H --> I["FLAN-T5 Generative AI Assistant"]
 
-    I --> J[Explanation and Safer Rewrite]
+    I --> J["Explanation & Safer Rewrite"]
 
-    H --> K[Human Review Recommendation]
-    J --> L[Streamlit Interface]
+    H --> K["Human Review Recommendation"]
+
+    J --> L["Streamlit Interface"]
     K --> L
 
-    L --> M[Analysis Report / CSV Export]
+    L --> M["Analysis Report / CSV Export"]
 ```
 
-### Technology Stack
+### Moderation Workflow
 
-| Component | Technology |
-|---|---|
-| Programming Language | Python |
-| Data Processing | Pandas, NumPy |
-| Machine Learning | Scikit-learn |
-| Deep Learning | PyTorch |
-| NLP | Hugging Face Transformers |
-| Classification Models | DistilBERT |
-| Generative AI | FLAN-T5-base |
-| Visualization | Streamlit |
-| Model Hosting | Hugging Face Hub |
-| Application Hosting | Streamlit Community Cloud |
-| Development Environment | Google Colab |
+1. The user submits a comment or uploads a CSV file.
+2. Input text is processed by the application.
+3. The spam classifier predicts whether the comment is potentially spam.
+4. The toxicity classifier evaluates six independent toxicity categories.
+5. Category-specific thresholds are applied to toxicity predictions.
+6. The application combines predictions and assesses moderation uncertainty.
+7. FLAN-T5 assists with explanations and safer alternative wording.
+8. Results are presented through the Streamlit interface.
 
 ---
 
-## 🤖 Model Performance
+## Model Performance
 
-The project uses separate models for spam detection and multi-label toxicity classification.
+The project uses dedicated models for spam detection and multi-label toxicity classification.
 
-### Spam Classification
+### Spam Classification — Traditional ML Evaluation
 
-Reported evaluation results:
+The following traditional machine-learning models were evaluated during experimentation.
 
 | Model | F1 Score | Spam Precision | Spam Recall |
 |---|---:|---:|---:|
@@ -177,11 +176,11 @@ Reported evaluation results:
 | Support Vector Machine | 0.94 | 0.96 | 0.92 |
 | Naive Bayes | 0.93 | 0.93 | 0.92 |
 
-The Logistic Regression model achieved the strongest reported baseline among these evaluated models.
+Logistic Regression achieved the strongest reported F1 score among these evaluated traditional ML baselines.
 
-The deployed application uses a separate fine-tuned DistilBERT spam classifier.
+**Deployment distinction:** The application uses a separate fine-tuned DistilBERT spam classifier. The table above represents traditional ML experiments, not the deployed DistilBERT model.
 
-### Toxicity Classification
+### Toxicity Classification — DistilBERT
 
 The fine-tuned DistilBERT model was evaluated using multi-label classification metrics.
 
@@ -191,7 +190,7 @@ The fine-tuned DistilBERT model was evaluated using multi-label classification m
 | Micro F1 | 0.7529 | 0.7764 |
 | Weighted F1 | 0.7616 | 0.7805 |
 
-Optimizing category-specific thresholds improved the reported evaluation results.
+Optimizing category-specific decision thresholds improved the reported evaluation results across all three metrics.
 
 ### Optimized Toxicity Thresholds
 
@@ -206,27 +205,24 @@ Optimizing category-specific thresholds improved the reported evaluation results
 
 These thresholds are used by the deployed moderation application.
 
-*Note: The spam comparison table represents evaluated traditional ML models, not the deployed DistilBERT model. Refer to the notebooks for the corresponding experiments and evaluation details.*
+*Evaluation metrics are based on the reported experimental results. Refer to the project notebooks for the associated training and evaluation workflows.*
 
 ---
 
-## 📚 Dataset and Data Preparation
+## Datasets and Processing
 
-The project involved collecting, inspecting, cleaning, and preparing datasets for separate spam and toxicity classification tasks.
+The project involved dataset inspection, exploratory analysis, cleaning, preprocessing, and preparation for separate spam and toxicity classification tasks.
 
 ### Spam Detection
 
-The spam classification pipeline incorporated spam-labelled comment data, including the SPAMID dataset.
-
-Reported cleaned SPAMID dataset size: **72,873 rows**.
+- Dataset: SPAMID and associated spam-labelled comment data.
+- Reported cleaned SPAMID dataset size: **72,873 rows**.
 
 ### Toxicity Detection
 
-The toxicity pipeline used Jigsaw toxicity data.
-
-Reported cleaned Jigsaw dataset size: **159,272 rows**.
-
-The toxicity task covers six independently predicted categories.
+- Dataset: Jigsaw Toxic Comment Classification.
+- Reported cleaned dataset size: **159,272 rows**.
+- Six independently predicted toxicity categories.
 
 ### Data Preparation Workflow
 
@@ -235,121 +231,149 @@ The toxicity task covers six independently predicted categories.
 - Duplicate detection and removal.
 - Text cleaning and preprocessing.
 - Label distribution analysis.
-- Dataset preparation for model training and evaluation.
+- Training and evaluation dataset preparation.
 - Model evaluation and threshold optimization.
 
-For detailed preprocessing and experiments, refer to the Jupyter notebooks in the `notebooks/` directory.
+Detailed experiments and preprocessing workflows are documented in the `notebooks/` directory.
 
 ---
 
-## 🔗 Pretrained and Fine-Tuned Models
+## Models and Resources
 
-The fine-tuned classification models are hosted separately on Hugging Face.
+The fine-tuned classification models are hosted on Hugging Face Hub.
 
-| Model | Hugging Face Repository |
+| Component | Model / Resource |
 |---|---|
-| Spam Classifier | [smart-comment-classifier-spam](https://huggingface.co/siddhu915176/smart-comment-classifier-spam) |
-| Toxicity Classifier | [smart-comment-classifier-toxicity](https://huggingface.co/siddhu915176/smart-comment-classifier-toxicity) |
-
-**Generative AI Model:** [Google FLAN-T5-base](https://huggingface.co/google/flan-t5-base)
+| Spam Classifier | [Smart Comment Classifier — Spam](https://huggingface.co/siddhu915176/smart-comment-classifier-spam) |
+| Toxicity Classifier | [Smart Comment Classifier — Toxicity](https://huggingface.co/siddhu915176/smart-comment-classifier-toxicity) |
+| Generative AI | [Google FLAN-T5-base](https://huggingface.co/google/flan-t5-base) |
 
 The Streamlit application downloads the public classification models directly from Hugging Face.
 
+No model weight files need to be committed to the GitHub repository.
+
 ---
 
-## 🚀 Run Locally
+## Technology Stack
 
-### 1. Clone the repository
+| Layer | Technologies |
+|---|---|
+| Programming Language | Python |
+| Data Processing | Pandas, NumPy |
+| Machine Learning | Scikit-learn |
+| Deep Learning | PyTorch |
+| NLP | Hugging Face Transformers |
+| Classification Models | DistilBERT |
+| Generative AI | FLAN-T5-base |
+| Application Interface | Streamlit |
+| Model Hosting | Hugging Face Hub |
+| Application Hosting | Streamlit Community Cloud |
+| Development Environment | Google Colab |
+
+---
+
+## Getting Started
+
+Follow these steps to run the application locally.
+
+### Prerequisites
+
+- Python 3.10 or later.
+- Git.
+- Internet connection for downloading hosted models.
+- Sufficient memory to load the classification and generative models.
+
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/smart-comment-classifier.git
+git clone https://github.com/deepak-kumar-da/smart-comment-classifier.git
 
 cd smart-comment-classifier
 ```
 
-### 2. Create a virtual environment
+### 2. Create a Virtual Environment
 
 ```bash
 python -m venv venv
 ```
 
-Activate it:
+Activate the environment:
 
 **Windows**
+
 ```bash
 venv\Scripts\activate
 ```
 
 **Linux / macOS**
+
 ```bash
 source venv/bin/activate
 ```
 
-### 3. Install dependencies
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Launch the application
+### 4. Run the Application
 
 ```bash
 streamlit run streamlit_app/app.py
 ```
 
-The application will be available at the local Streamlit address displayed in your terminal.
+The application will be accessible at the local URL displayed in your terminal.
 
-*The application requires an internet connection to download the hosted models on first use. Hardware and memory requirements depend on the models and hosting environment.*
+**Note:** An internet connection is required to download the hosted models on first use. Model loading and inference performance depend on available hardware and memory.
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```text
 smart-comment-classifier/
 │
 ├── notebooks/
-│   ├── [Your Notebook 00]
-│   ├── [Your Notebook 01]
-│   ├── ...
-│   └── [Your Final Notebook]
+│   ├── Jupyter Notebook Experiments
+│   └── Model Training & Evaluation
 │
 ├── streamlit_app/
 │   └── app.py
 │
-├── screenshots/
-│   ├── home.png
-│   ├── comment_analysis.png
-│   └── bulk_moderation.png
+├── screenshots/              # Application screenshots (to be added)
 │
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-└── LICENSE
+└── LICENSE                   # Include if a license has been added
 ```
 
+The notebooks directory contains the project's experimentation, preprocessing, training, and evaluation workflows.
+
 ---
 
-## ⚖️ Responsible AI and Limitations
+## Responsible AI
 
-This project is designed to assist human moderation, not replace human judgment.
+Smart Comment Classifier is designed to assist human moderation, not replace human judgment.
 
-Important considerations:
+Important limitations and considerations:
 
-- Predictions are probabilistic and may contain false positives or false negatives.
+- Predictions are probabilistic and may produce false positives or false negatives.
 - Context, sarcasm, slang, and language variation can affect classification.
 - Toxicity categories may overlap.
-- Generated explanations and rewrites may not always be perfect.
-- Uncertain predictions should be reviewed by a human.
-- The application does not automatically delete or punish users based on predictions.
+- A comment's intent cannot always be determined from text alone.
+- Generative AI explanations and rewrites may be imperfect.
+- Uncertain or high-impact decisions should be reviewed by a human.
+- The application does not automatically delete comments or penalize users.
 
-The system should undergo additional testing, validation, and monitoring before any production deployment on a real platform.
+Additional validation, bias evaluation, monitoring, and domain-specific testing are necessary before deployment in a production moderation environment.
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
-Potential future development includes:
+Potential directions for further development include:
 
 - Improved contextual understanding and multilingual support.
 - Better detection of sarcasm and implicit abuse.
@@ -362,27 +386,28 @@ Potential future development includes:
 
 ---
 
-## 👨‍💻 Project Information
+## Project Information
 
-**Project:** Smart Comment Classifier  
-**Domain:** Machine Learning | NLP | Generative AI  
-**Application:** Streamlit  
-**Model Hosting:** Hugging Face Hub
+| Detail | Information |
+|---|---|
+| Project | Smart Comment Classifier |
+| Domain | Machine Learning, NLP & Generative AI |
+| Interface | Streamlit |
+| Classification Models | Fine-tuned DistilBERT |
+| Generative Model | FLAN-T5-base |
+| Model Hosting | Hugging Face Hub |
+| Application Hosting | Streamlit Community Cloud |
 
-**Developer:** YOUR NAME
+**Developer:** Deepak Kumar
 
-**GitHub:** [YOUR GITHUB PROFILE]
-
-**Live Demo:** [YOUR STREAMLIT APP URL]
-
----
-
-### If you find this project interesting
-
-Feel free to explore the notebooks, inspect the model repositories, and try the live application.
-
-⭐ If you find the project useful, consider giving the repository a star.
+- **GitHub:** [deepak-kumar-da](https://github.com/deepak-kumar-da)
+- **Repository:** [smart-comment-classifier](https://github.com/deepak-kumar-da/smart-comment-classifier)
+- **Live Application:** [Launch Smart Comment Classifier](https://smart-comment-classifier.streamlit.app/)
 
 ---
 
-*Built as an applied Machine Learning, NLP, and Generative AI project.*
+<p align="center">
+  <strong>Built with Machine Learning, NLP, and Generative AI.</strong>
+  <br/>
+  <sub>An applied AI project exploring intelligent and human-assisted content moderation.</sub>
+</p>
