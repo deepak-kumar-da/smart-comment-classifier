@@ -10,7 +10,7 @@
 
 The system combines dedicated machine learning models, Natural Language Processing (NLP), and a generative AI assistant to provide moderation predictions, confidence scores, explanations, and safer alternative wording.
 
-🌐 **Live Application:** [ADD YOUR STREAMLIT APP URL]
+🌐 **Live Application:** (https://smart-comment-classifier.streamlit.app/)
 
 📂 **GitHub Repository:** [ADD YOUR GITHUB REPOSITORY URL]
 
