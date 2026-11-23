@@ -380,10 +380,19 @@ The app opens at the local address shown in your terminal.
 smart-comment-classifier/
 │
 ├── notebooks/                # Data preparation, training and evaluation notebooks
-│   └── 00_dataset_research_and_audit.ipynb           # Plots and reports exported from the notebooks
-│   ├── spam_confusion_matrix.png
-│   ├── toxicity_classification_report.png
-│   └── toxicity_threshold_optimization.png
+│   └── 00_dataset_research_and_audit.ipynb          
+│   ├── 01_dataset_quality_and_validation.ipynb
+│   ├── 02_data_cleaning_and_preprocessing.ipynb
+│   ├── 03_exploratory_data_analysis.ipynb
+│   ├── 04_classical_ml_baselines.ipynb          
+│   ├── 05_model_evaluation_and_error_analysis.ipynb
+│   ├── 06_model_improvement_and_hyperparameter_tuning.ipynb
+│   ├── 07_transformer_based_models.ipynb
+│   ├── 08_comparative_evaluation_and_error_analysis.ipynb           
+│   ├── 09_llm_assisted_moderation.ipynb
+│   └── 10_streamlit_moderation_app.ipynb
+│    
+|
 ├── streamlit_app/
 │   └── app.py                # Streamlit application
 │
@@ -394,12 +403,6 @@ smart-comment-classifier/
 │   ├── 04_spam_example.png
 │   ├── 05_bulk_results.png
 │   └── 06_how_it_works.png
-│
-├── docs/
-│   └── evaluation/           # Plots and reports exported from the notebooks
-│       ├── spam_confusion_matrix.png
-│       ├── toxicity_classification_report.png
-│       └── toxicity_threshold_optimization.png
 │
 ├── sample_data/
 │   ├── sample_comments.csv   # Example input for bulk moderation
