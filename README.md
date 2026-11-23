@@ -277,9 +277,8 @@ Optimizing category-specific thresholds improved every reported metric.
 
 | Spam classifier | Toxicity classifier |
 |---|---|
-| ![Spam confusion matrix](docs/evaluation/spam_confusion_matrix.png) | ![Toxicity classification report](docs/evaluation/toxicity_classification_report.png) |
+| ![Spam confusion matrix](docs/evaluation/spam_confusion_matrix.png) | ![Toxicity confusion matrix](docs/evaluation/toxicity_confusion_matrix.png) |
 
-![Threshold optimization](docs/evaluation/toxicity_threshold_optimization.png)
 
 ---
 
