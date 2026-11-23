@@ -380,7 +380,10 @@ The app opens at the local address shown in your terminal.
 smart-comment-classifier/
 │
 ├── notebooks/                # Data preparation, training and evaluation notebooks
-│
+│   └── 00_dataset_research_and_audit.ipynb           # Plots and reports exported from the notebooks
+│   ├── spam_confusion_matrix.png
+│   ├── toxicity_classification_report.png
+│   └── toxicity_threshold_optimization.png
 ├── streamlit_app/
 │   └── app.py                # Streamlit application
 │
