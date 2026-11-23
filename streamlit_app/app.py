@@ -1,5 +1,7 @@
+import base64
 import html as html_lib
 import io
+import math
 import random
 
 import numpy as np
@@ -94,6 +96,16 @@ SIGNALS = {
     "identity_hate": ("Identity hate", "🛑", "Hostility toward a group because of who they are"),
 }
 
+# Short, number-free reasons used in the "Why this decision" card
+REASONS = {
+    "toxic": "Uses rude, disrespectful or hostile language",
+    "severe_toxic": "Uses extremely aggressive or hateful language",
+    "obscene": "Contains profanity or vulgar wording",
+    "threat": "Contains a threat of harm or violence",
+    "insult": "Insults or demeans the person it is aimed at",
+    "identity_hate": "Shows hostility toward a group of people",
+}
+
 # Pre-written friendly alternatives, used when the AI draft is not clean enough
 FRIENDLY_TEMPLATES = {
     "threat": [
@@ -141,6 +153,11 @@ LEVEL_BY_KEY = {
 }
 LEVEL_ICON = {"safe": "✓", "warn": "?", "danger": "!"}
 RING_COLOR = {"safe": "#22c55e", "warn": "#f59e0b", "danger": "#dc2626"}
+RADAR_COLORS = {
+    "safe": ("#6366f1", "#14b8a6"),
+    "warn": ("#f59e0b", "#f97316"),
+    "danger": ("#f97316", "#dc2626"),
+}
 
 st.set_page_config(
     page_title=APP_TITLE,
@@ -276,7 +293,6 @@ header[data-testid="stHeader"] { background: transparent; }
 .chip.warn { color: var(--warn); border-color: var(--warn-line); }
 .chip.safe { color: var(--safe); border-color: var(--safe-line); }
 
-/* Risk ring */
 .ring { flex: 0 0 auto; width: 104px; height: 104px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .ring-in { width: 80px; height: 80px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px var(--line); }
 .ring-in b { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; line-height: 1; }
@@ -285,50 +301,90 @@ header[data-testid="stHeader"] { background: transparent; }
 .quote { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--brand); border-radius: 14px; padding: 14px 18px; color: var(--text); font-size: 14.5px; line-height: 1.6; margin-bottom: 14px; }
 .quote small { display: block; color: var(--muted); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; margin-bottom: 6px; }
 
-/* ---------- Metric cards ---------- */
-.metric { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(15,23,42,0.04); border-top: 3px solid #cbd5e1; }
-.metric.t-green { border-top-color: #22c55e; } .metric.t-red { border-top-color: #ef4444; }
-.metric.t-orange { border-top-color: #f97316; } .metric.t-blue { border-top-color: #4f46e5; } .metric.t-amber { border-top-color: #f59e0b; }
-.metric-label { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-.metric-value { font-size: 30px; font-weight: 800; color: var(--ink); margin-top: 6px; letter-spacing: -0.8px; }
-.metric-note { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+/* ---------- Stat cards ---------- */
+.stat {
+    position: relative; overflow: hidden; border-radius: 20px; padding: 20px 22px 18px 22px;
+    border: 1px solid; box-shadow: 0 8px 22px rgba(15,23,42,0.06);
+}
+.stat::before {
+    content: ""; position: absolute; right: -34px; top: -34px; width: 130px; height: 130px; border-radius: 50%;
+    background: radial-gradient(circle, var(--glow), transparent 70%); opacity: 0.55;
+}
+.stat-top { position: relative; display: flex; align-items: center; gap: 12px; }
+.stat-ico {
+    flex: 0 0 auto; width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; background: var(--grad); box-shadow: 0 8px 16px rgba(15,23,42,0.16);
+}
+.stat-label { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.9px; color: #475569; line-height: 1.3; }
+.stat-value { position: relative; font-size: 36px; font-weight: 800; letter-spacing: -1.2px; color: var(--ink); margin: 14px 0 10px 0; line-height: 1; }
+.stat-bar { position: relative; height: 7px; background: rgba(15,23,42,0.08); border-radius: 999px; overflow: hidden; }
+.stat-bar i { display: block; height: 100%; border-radius: 999px; background: var(--grad); }
+.stat-note { position: relative; font-size: 12.5px; font-weight: 600; color: var(--text); margin-top: 10px; }
+.stat.orange { --grad: linear-gradient(135deg, #fb923c, #f43f5e); --glow: #fdba74; background: linear-gradient(135deg, #fff7ed, #fff1f2); border-color: #fed7aa; }
+.stat.red { --grad: linear-gradient(135deg, #f43f5e, #dc2626); --glow: #fda4af; background: linear-gradient(135deg, #fff1f2, #fef2f2); border-color: #fecdd3; }
+.stat.indigo { --grad: linear-gradient(135deg, #6366f1, #0ea5e9); --glow: #a5b4fc; background: linear-gradient(135deg, #eef2ff, #f0f9ff); border-color: #c7d2fe; }
+.stat.green { --grad: linear-gradient(135deg, #22c55e, #14b8a6); --glow: #86efac; background: linear-gradient(135deg, #f0fdf4, #f0fdfa); border-color: #bbf7d0; }
+.stat.amber { --grad: linear-gradient(135deg, #f59e0b, #f97316); --glow: #fde68a; background: linear-gradient(135deg, #fffbeb, #fff7ed); border-color: #fde68a; }
 
 /* ---------- Insight cards ---------- */
-.ai-card { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; height: 100%; box-shadow: 0 4px 14px rgba(15,23,42,0.035); }
-.ai-card h5 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ai-card { background: #fff; border: 1px solid var(--line); border-top: 3px solid #c7d2fe; border-radius: 18px; padding: 20px 22px; height: 100%; box-shadow: 0 6px 20px rgba(15,23,42,0.045); }
+.ai-card.l-danger { border-top-color: #f87171; } .ai-card.l-warn { border-top-color: #fbbf24; } .ai-card.l-safe { border-top-color: #4ade80; }
+.ai-card.friendly { background: linear-gradient(180deg, #ffffff, #f0fdf4); border-color: var(--safe-line); border-top-color: #4ade80; }
+.ai-card h5 { margin: 0 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); font-weight: 800; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.h5-l { display: flex; align-items: center; gap: 9px; }
+.h5-ico { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, #e0e7ff, #cffafe); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
 .ai-card p { margin: 0; color: #1e293b; font-size: 14.5px; line-height: 1.7; }
-.ai-card.friendly { background: linear-gradient(180deg, #ffffff, #f0fdf4); border-color: var(--safe-line); }
-.tag-src { font-size: 10.5px; font-weight: 800; letter-spacing: 0.6px; color: var(--safe); background: #dcfce7; border-radius: 999px; padding: 3px 9px; text-transform: none; }
+.tag-src { font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; color: var(--safe); background: #dcfce7; border-radius: 999px; padding: 3px 10px; text-transform: none; white-space: nowrap; }
+.tag-conf { font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; color: #4338ca; background: #eef2ff; border-radius: 999px; padding: 3px 10px; text-transform: none; white-space: nowrap; }
+.why-lead { font-weight: 700; color: var(--ink) !important; font-size: 15px !important; }
+.why-list { list-style: none; padding: 0; margin: 10px 0 0 0; }
+.why-list li { position: relative; padding: 9px 0 9px 34px; font-size: 14.5px; color: #1e293b; line-height: 1.5; border-top: 1px dashed #e8edf5; }
+.why-list li:first-child { border-top: none; }
+.why-list li::before {
+    position: absolute; left: 0; top: 9px; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; content: "!"; background: #ef4444;
+}
+.why-list.safe li::before { content: "✓"; background: linear-gradient(135deg, #22c55e, #14b8a6); }
+.why-list.warn li::before { content: "?"; background: linear-gradient(135deg, #f59e0b, #f97316); }
+.why-list.danger li::before { content: "!"; background: linear-gradient(135deg, #f43f5e, #dc2626); }
+.why-note { margin-top: 10px; padding: 10px 14px; border-radius: 12px; background: #f8fafc; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
-/* ---------- Analysis breakdown ---------- */
-.an { background: #fff; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(15,23,42,0.045); }
-.an-head, .an-row { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,2fr) 120px; gap: 18px; align-items: center; padding: 14px 24px; }
-.an-head { background: #f8fafc; font-size: 11.5px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-.an-group { padding: 10px 24px; background: #fbfcfe; border-top: 1px solid #eef2f7; font-size: 11.5px; font-weight: 800; color: var(--brand); letter-spacing: 1.2px; text-transform: uppercase; }
-.an-row { border-top: 1px solid #f1f5f9; }
-.an-row.danger { background: #fff7f7; } .an-row.warn { background: #fffdf5; }
-.an-name b { display: block; font-size: 14px; color: var(--ink); }
-.an-name span { font-size: 12.5px; color: var(--muted); }
-.an-bar { display: flex; align-items: center; gap: 12px; }
-.an-track { position: relative; flex: 1; height: 9px; background: #eef2f7; border-radius: 999px; }
-.an-fill { height: 100%; border-radius: 999px; }
-.an-fill.danger { background: linear-gradient(90deg, #fb923c, #dc2626); }
-.an-fill.warn { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
-.an-fill.ok { background: linear-gradient(90deg, #93c5fd, #6366f1); }
-.an-tick { position: absolute; top: -4px; width: 2px; height: 17px; background: #0f172a; opacity: 0.4; border-radius: 2px; }
-.an-pct { width: 50px; text-align: right; font-weight: 800; font-size: 13.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.an-res { text-align: right; }
-.pill { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 4px 12px; border-radius: 999px; }
-.pill.danger { background: var(--danger); color: #fff; } .pill.warn { background: #f59e0b; color: #fff; } .pill.ok { background: #dcfce7; color: var(--safe); }
-.an-foot { padding: 12px 24px; border-top: 1px solid #eef2f7; background: #f8fafc; font-size: 12.5px; color: var(--muted); }
+/* ---------- Analysis: radar + summary ---------- */
+.bd-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px; box-shadow: 0 6px 20px rgba(15,23,42,0.045); height: 100%; }
+.panel h5 { margin: 0 0 14px 0; font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: 1.2px; text-transform: uppercase; }
+.radar-img { width: 100%; max-width: 500px; display: block; margin: 0 auto; }
+.radar-legend { display: flex; justify-content: center; gap: 24px; font-size: 12.5px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+.lg-fill { display: inline-block; width: 16px; height: 10px; border-radius: 3px; margin-right: 7px; vertical-align: middle; }
+.lg-dash { display: inline-block; width: 18px; border-top: 2px dashed #64748b; margin-right: 7px; vertical-align: middle; }
+.sum-label { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; margin: 14px 0 8px 0; }
+.sum-label.danger { color: var(--danger); } .sum-label.warn { color: var(--warn); } .sum-label.ok { color: var(--safe); }
+.sum-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 14px; margin-bottom: 8px; border-left: 4px solid; }
+.sum-row.danger { background: linear-gradient(90deg, #fff1f2, #ffffff); border-left-color: #ef4444; }
+.sum-row.warn { background: linear-gradient(90deg, #fffbeb, #ffffff); border-left-color: #f59e0b; }
+.sum-ico { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; }
+.sum-row.danger .sum-ico { background: linear-gradient(135deg, #fecdd3, #fed7aa); }
+.sum-row.warn .sum-ico { background: linear-gradient(135deg, #fde68a, #fed7aa); }
+.sum-text { flex: 1; min-width: 0; }
+.sum-text b { display: block; font-size: 14.5px; color: var(--ink); }
+.sum-text span { font-size: 12.5px; color: var(--muted); }
+.sum-side { text-align: right; white-space: nowrap; }
+.sum-side em { display: block; font-style: normal; font-size: 12px; font-weight: 800; }
+.sum-row.danger .sum-side em { color: var(--danger); } .sum-row.warn .sum-side em { color: var(--warn); }
+.sum-side small { font-size: 12px; color: var(--muted); font-weight: 600; }
+.clear-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.clear-chip { font-size: 12.5px; font-weight: 700; color: var(--safe); background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid var(--safe-line); padding: 6px 12px; border-radius: 999px; }
+.clear-chip::before { content: "✓ "; font-weight: 800; }
+.allclear { text-align: center; padding: 26px 10px 18px 10px; background: linear-gradient(135deg, #f0fdf4, #ecfeff); border: 1px solid var(--safe-line); border-radius: 16px; margin-bottom: 14px; }
+.allclear b { display: block; font-size: 18px; color: var(--safe); margin-top: 8px; }
+.allclear span { font-size: 13px; color: var(--muted); }
+.allclear .big { width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #14b8a6); color: #fff; font-size: 26px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
 
 /* ---------- Bulk ---------- */
 .empty { background: #fff; border: 1.5px dashed #cbd5e1; border-radius: 20px; padding: 34px 28px; text-align: center; }
 .empty-icon { font-size: 34px; margin-bottom: 8px; }
 .empty-title { font-size: 18px; font-weight: 800; color: var(--ink); }
 .empty-text { font-size: 14px; color: var(--muted); max-width: 520px; margin: 6px auto 0 auto; line-height: 1.6; }
-.panel { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px; box-shadow: 0 6px 20px rgba(15,23,42,0.045); height: 100%; }
-.panel h5 { margin: 0 0 16px 0; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 1.2px; text-transform: uppercase; }
 .donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
 .donut { position: relative; width: 168px; height: 168px; border-radius: 50%; flex: 0 0 auto; }
 .donut::after { content: ""; position: absolute; inset: 26px; background: #fff; border-radius: 50%; }
@@ -397,9 +453,7 @@ div[data-testid="stDataFrame"] { border-radius: 14px; overflow: hidden; border: 
     .pipe:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -22px; transform: translateX(50%); }
     .verdict { flex-direction: column; align-items: flex-start; padding: 22px; }
     .verdict-title { font-size: 24px; }
-    .an-head { display: none; }
-    .an-row { grid-template-columns: 1fr; gap: 8px; }
-    .an-res { text-align: left; }
+    .bd-grid { grid-template-columns: 1fr; }
     .vrow { grid-template-columns: 1fr; gap: 2px; }
 }
 </style>
@@ -640,53 +694,73 @@ def get_verdict(result):
     }
 
 
-def build_explanation(result) -> str:
-    """Clear, factual explanation written directly from the detectors' scores."""
+def confidence_label(p: float) -> str:
+    if p >= 0.95:
+        return "Very high"
+    if p >= 0.85:
+        return "High"
+    if p >= 0.70:
+        return "Moderate"
+    return "Fair"
+
+
+def build_explanation(result) -> dict:
+    """Plain-language explanation with no scores or limits, just clear reasons."""
 
     spam = result["spam"]
     tox = result["toxicity"]
     key = result["verdict"]["key"]
 
     flagged = sorted(result["categories"], key=lambda c: -tox[c]["probability"])
-    sentences = []
+    is_spam = spam["prediction"] == 1
 
-    if flagged:
-        detail = ", ".join(
-            f"{pretty(c)} ({pct(tox[c]['probability'])} confidence, limit {tox[c]['threshold']:.0%})"
-            for c in flagged
-        )
-        meaning = "; ".join(lower_first(SIGNALS[c][2]) for c in flagged)
-        sentences.append(f"The toxicity detector flagged this comment for {detail}.")
-        sentences.append(f"In plain terms, it contains {meaning}.")
-
-    if spam["prediction"] == 1:
-        sentences.append(
-            f"The spam detector is {pct(spam['spam_probability'])} confident this is spam, "
-            f"which means it looks like {lower_first(SIGNALS['spam'][2])}."
-        )
-        if not flagged:
-            sentences.append("No toxicity categories crossed their limits.")
-    elif flagged:
-        sentences.append(f"The spam detector found no sign of spam ({pct(spam['spam_probability'])}).")
-
-    if key == "borderline":
-        close = [pretty(c) for c in result["uncertain_categories"]]
-        if result["spam_uncertain"]:
-            close.append("Spam")
-        verb = "is" if len(close) == 1 else "are"
-        sentences.append(
-            f"No signal crossed its limit, but {', '.join(close)} {verb} very close, "
-            "so a human should double-check."
-        )
+    points, note = [], ""
 
     if key == "clean":
-        top = max(tox, key=lambda c: tox[c]["probability"])
-        sentences.append(
-            "Neither detector found anything above its safety limit. "
-            f"The strongest signal was {pretty(top)} at {pct(tox[top]['probability'])}."
-        )
+        lead = "This reads like a normal, respectful comment."
+        points = [
+            "No spam, scam or junk-link patterns were found",
+            "No rude, hostile or harmful language was found",
+        ]
+        confidence = confidence_label(1 - result["risk"])
 
-    return " ".join(sentences)
+    elif key == "borderline":
+        lead = "This comment is on the edge, so it can't be decided automatically."
+        for c in result["uncertain_categories"]:
+            points.append(f"It might contain {lower_first(SIGNALS[c][2])}, but not clearly enough to flag")
+        if result["spam_uncertain"]:
+            points.append("It looks a little like spam, but not clearly enough to flag")
+        note = "A moderator should take a quick look before deciding."
+        confidence = "Low"
+
+    elif key == "spam":
+        lead = "This comment looks like spam."
+        points = ["It reads like a promotion, scam or junk-link message"]
+        note = "No harmful or abusive language was found."
+        confidence = confidence_label(spam["spam_probability"])
+
+    else:
+        lead = "This comment was flagged as harmful because it:"
+        points = [REASONS[c] for c in flagged[:3]]
+        if is_spam:
+            points.append("Also reads like a promotion, scam or junk-link message")
+        else:
+            note = "No spam patterns were found."
+        top = max(tox[c]["probability"] for c in flagged)
+        if is_spam:
+            top = max(top, spam["spam_probability"])
+        confidence = confidence_label(top)
+
+    return {"lead": lead, "points": points, "note": note, "confidence": confidence}
+
+
+def flatten_explanation(expl: dict) -> str:
+    text = expl["lead"]
+    if expl["points"]:
+        text += " " + "; ".join(expl["points"]) + "."
+    if expl["note"]:
+        text += " " + expl["note"]
+    return text
 
 
 def next_step(key: str) -> str:
@@ -751,8 +825,9 @@ def classify_comment(text, components):
         "status": status,
     }
     result["verdict"] = get_verdict(result)
-    result["explanation"] = build_explanation(result)
     result["risk"] = risk_score(result)
+    result["explanation_data"] = build_explanation(result)
+    result["explanation"] = flatten_explanation(result["explanation_data"])
 
     return result
 
@@ -892,13 +967,21 @@ def flatten_result(result):
 # UI COMPONENTS
 # ============================================================
 
-def metric_card(label, value, note="", tone=""):
+def stat_card(icon, label, value, note="", tone="indigo", bar=None):
+    bar_html = ""
+    if bar is not None:
+        width = max(min(float(bar), 1.0), 0.0) * 100
+        if 0 < width < 3:
+            width = 3
+        bar_html = f'<div class="stat-bar"><i style="width:{width:.1f}%"></i></div>'
+
     render(
         f"""
-        <div class="metric {tone}">
-            <div class="metric-label">{esc(label)}</div>
-            <div class="metric-value">{esc(value)}</div>
-            <div class="metric-note">{esc(note)}</div>
+        <div class="stat {tone}">
+            <div class="stat-top"><div class="stat-ico">{icon}</div><div class="stat-label">{esc(label)}</div></div>
+            <div class="stat-value">{esc(value)}</div>
+            {bar_html}
+            <div class="stat-note">{esc(note)}</div>
         </div>
         """
     )
@@ -942,92 +1025,193 @@ def render_verdict(result):
     )
 
 
-def render_insights(explanation, key, rewrite, source):
+def why_card(expl, level):
+    points = "".join(f"<li>{esc(p)}</li>" for p in expl["points"])
+    list_html = f'<ul class="why-list {level}">{points}</ul>' if points else ""
+    note_html = f'<div class="why-note">{esc(expl["note"])}</div>' if expl["note"] else ""
+
+    return (
+        f'<div class="ai-card l-{level}">'
+        f'<h5><span class="h5-l"><span class="h5-ico">💡</span>Why this decision</span>'
+        f'<span class="tag-conf">{esc(expl["confidence"])} confidence</span></h5>'
+        f'<p class="why-lead">{esc(expl["lead"])}</p>{list_html}{note_html}</div>'
+    )
+
+
+def render_insights(expl, key, rewrite, source):
+    level = LEVEL_BY_KEY.get(key, "warn")
     a, b = st.columns(2)
     with a:
-        render(
-            f"""
-            <div class="ai-card"><h5>Why this decision</h5>
-            <p>{esc(explanation)}</p></div>
-            """
-        )
+        render(why_card(expl, level))
     with b:
         if rewrite:
             render(
-                f"""
-                <div class="ai-card friendly"><h5>Friendlier way to say it
-                <span class="tag-src">{esc(source)}</span></h5>
-                <p>{esc(rewrite)}</p></div>
-                """
+                f'<div class="ai-card friendly"><h5><span class="h5-l"><span class="h5-ico">✨</span>'
+                f'Friendlier way to say it</span><span class="tag-src">{esc(source)}</span></h5>'
+                f"<p>{esc(rewrite)}</p></div>"
             )
         else:
             render(
-                f"""
-                <div class="ai-card"><h5>What to do next</h5>
-                <p>{esc(next_step(key))}</p></div>
-                """
+                f'<div class="ai-card l-{level}"><h5><span class="h5-l"><span class="h5-ico">➡️</span>'
+                f"What to do next</span></h5><p>{esc(next_step(key))}</p></div>"
             )
 
 
-def an_row(key, probability, threshold, flagged, uncertain):
-    name, _icon, desc = SIGNALS[key]
+# ---------- Analysis: radar + summary ----------
 
-    if flagged:
-        state, label = "danger", "Flagged"
-    elif uncertain:
-        state, label = "warn", "Borderline"
+def signal_entries(result):
+    entries = []
+    for k in ["spam"] + TOX_LABELS:
+        if k == "spam":
+            p, thr = result["spam"]["spam_probability"], 0.5
+            flagged = result["spam"]["prediction"] == 1
+            unc = result["spam_uncertain"] and not flagged
+        else:
+            v = result["toxicity"][k]
+            p, thr = v["probability"], v["threshold"]
+            flagged = v["prediction"] == 1
+            unc = v["uncertain"] and not flagged
+        entries.append({"key": k, "p": p, "thr": thr, "flagged": flagged, "unc": unc})
+    return entries
+
+
+def radar_svg(entries, level) -> str:
+    n = len(entries)
+    cx, cy, R = 260, 200, 118
+    c1, c2 = RADAR_COLORS[level]
+
+    def angle(i):
+        return -math.pi / 2 + 2 * math.pi * i / n
+
+    def pt(i, r):
+        a = angle(i)
+        return cx + r * math.cos(a), cy + r * math.sin(a)
+
+    def poly(radii):
+        return " ".join(f"{pt(i, r)[0]:.1f},{pt(i, r)[1]:.1f}" for i, r in enumerate(radii))
+
+    parts = [
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 400" '
+        "font-family=\"Inter, 'Segoe UI', Arial, sans-serif\">",
+        f'<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
+        f'<stop offset="0" stop-color="{c1}"/><stop offset="1" stop-color="{c2}"/></linearGradient></defs>',
+    ]
+
+    for lvl in (1.0, 0.75, 0.5, 0.25):
+        fill = "#f8fafc" if lvl == 1.0 else "none"
+        parts.append(f'<polygon points="{poly([R * lvl] * n)}" fill="{fill}" stroke="#e2e8f0" stroke-width="1"/>')
+
+    for i in range(n):
+        x, y = pt(i, R)
+        parts.append(f'<line x1="{cx}" y1="{cy}" x2="{x:.1f}" y2="{y:.1f}" stroke="#e2e8f0" stroke-width="1"/>')
+
+    # Safety limit
+    parts.append(
+        f'<polygon points="{poly([R * e["thr"] for e in entries])}" fill="none" '
+        'stroke="#64748b" stroke-width="1.6" stroke-dasharray="5 4"/>'
+    )
+
+    # Detected level
+    radii = [R * max(min(e["p"], 1.0), 0.04) for e in entries]
+    parts.append(
+        f'<polygon points="{poly(radii)}" fill="url(#g)" fill-opacity="0.38" '
+        f'stroke="{c1}" stroke-width="2.5" stroke-linejoin="round"/>'
+    )
+
+    for i, e in enumerate(entries):
+        x, y = pt(i, radii[i])
+        if e["flagged"]:
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6.5" fill="#dc2626" stroke="#fff" stroke-width="2"/>')
+        elif e["unc"]:
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="#f59e0b" stroke="#fff" stroke-width="2"/>')
+        else:
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="#fff" stroke="{c1}" stroke-width="2"/>')
+
+    for i, e in enumerate(entries):
+        lx, ly = pt(i, R + 26)
+        cos_a = math.cos(angle(i))
+        anchor = "start" if cos_a > 0.3 else ("end" if cos_a < -0.3 else "middle")
+        color = "#b91c1c" if e["flagged"] else ("#b45309" if e["unc"] else "#334155")
+        weight = 800 if (e["flagged"] or e["unc"]) else 600
+        sub = color if (e["flagged"] or e["unc"]) else "#94a3b8"
+        name = SIGNALS[e["key"]][0]
+        parts.append(
+            f'<text x="{lx:.1f}" y="{ly - 2:.1f}" text-anchor="{anchor}" font-size="13" '
+            f'font-weight="{weight}" fill="{color}">{name}</text>'
+        )
+        parts.append(
+            f'<text x="{lx:.1f}" y="{ly + 13:.1f}" text-anchor="{anchor}" font-size="11.5" '
+            f'font-weight="600" fill="{sub}">{pct(e["p"])}</text>'
+        )
+
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def sum_row(e, state):
+    name, icon, desc = SIGNALS[e["key"]]
+    if state == "danger":
+        strength = "Very strong match" if e["p"] >= 0.95 else "Strong match"
     else:
-        state, label = "ok", "Clear"
-
-    width = max(min(probability, 1.0) * 100, 1.5)
-    row_cls = state if state != "ok" else ""
+        strength = "Close to the limit"
 
     return (
-        f'<div class="an-row {row_cls}">'
-        f'<div class="an-name"><b>{esc(name)}</b><span>{esc(desc)}</span></div>'
-        f'<div class="an-bar"><div class="an-track">'
-        f'<div class="an-fill {state}" style="width:{width:.1f}%"></div>'
-        f'<i class="an-tick" style="left:{threshold * 100:.1f}%"></i></div>'
-        f'<span class="an-pct">{pct(probability)}</span></div>'
-        f'<div class="an-res"><span class="pill {state}">{label}</span></div>'
-        f"</div>"
+        f'<div class="sum-row {state}"><div class="sum-ico">{icon}</div>'
+        f'<div class="sum-text"><b>{esc(name)}</b><span>{esc(desc)}</span></div>'
+        f'<div class="sum-side"><em>{strength}</em><small>{pct(e["p"])}</small></div></div>'
     )
+
+
+def summary_html(entries):
+    flagged = sorted([e for e in entries if e["flagged"]], key=lambda e: -e["p"])
+    border = sorted([e for e in entries if e["unc"]], key=lambda e: -e["p"])
+    clear = [e for e in entries if not e["flagged"] and not e["unc"]]
+
+    html = ""
+
+    if flagged:
+        html += '<div class="sum-label danger">Flagged</div>' + "".join(sum_row(e, "danger") for e in flagged)
+    if border:
+        html += '<div class="sum-label warn">Close to the limit</div>' + "".join(sum_row(e, "warn") for e in border)
+
+    if not flagged and not border:
+        html += (
+            '<div class="allclear"><div class="big">✓</div><b>All checks passed</b>'
+            f"<span>None of the {len(entries)} detectors found a problem.</span></div>"
+        )
+
+    if clear:
+        chips = "".join(f'<span class="clear-chip">{esc(SIGNALS[e["key"]][0])}</span>' for e in clear)
+        html += f'<div class="sum-label ok">Clear</div><div class="clear-chips">{chips}</div>'
+
+    return html
 
 
 def render_breakdown(result):
-    spam_html = an_row(
-        "spam",
-        result["spam"]["spam_probability"],
-        0.5,
-        result["spam"]["prediction"] == 1,
-        result["spam_uncertain"] and result["spam"]["prediction"] == 0,
-    )
+    entries = signal_entries(result)
+    level = result["verdict"]["level"]
+    c1, c2 = RADAR_COLORS[level]
 
-    tox_items = sorted(
-        result["toxicity"].items(),
-        key=lambda kv: (-kv[1]["prediction"], -kv[1]["probability"]),
-    )
-    tox_html = "".join(
-        an_row(
-            label,
-            v["probability"],
-            v["threshold"],
-            v["prediction"] == 1,
-            v["uncertain"] and v["prediction"] == 0,
-        )
-        for label, v in tox_items
-    )
+    svg = radar_svg(entries, level)
+    b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
 
     render(
-        '<div class="an">'
-        '<div class="an-head"><div>Signal</div><div>Detector confidence</div><div style="text-align:right">Result</div></div>'
-        '<div class="an-group">Spam detection</div>'
-        + spam_html
-        + '<div class="an-group">Toxicity detection</div>'
-        + tox_html
-        + '<div class="an-foot">The dark tick on each bar marks that signal\'s safety limit. '
-        "A signal is flagged when its confidence reaches the tick.</div>"
-        "</div>"
+        f"""
+        <div class="bd-grid">
+            <div class="panel">
+                <h5>Signal radar</h5>
+                <img class="radar-img" alt="Radar chart of detector confidence" src="data:image/svg+xml;base64,{b64}"/>
+                <div class="radar-legend">
+                    <span><i class="lg-fill" style="background:linear-gradient(135deg,{c1},{c2})"></i>Detected level</span>
+                    <span><i class="lg-dash"></i>Safety limit</span>
+                </div>
+            </div>
+            <div class="panel">
+                <h5>Signal summary</h5>
+                {summary_html(entries)}
+            </div>
+        </div>
+        """
     )
 
 
@@ -1043,26 +1227,41 @@ def render_single_result(result):
 
     tox_values = result["toxicity"]
     top_label = max(tox_values, key=lambda k: tox_values[k]["probability"])
+    spam_p = result["spam"]["spam_probability"]
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        metric_card("Spam score", pct(result["spam"]["spam_probability"]), result["spam"]["label"], "t-orange")
+        stat_card("🚫", "Spam score", pct(spam_p), result["spam"]["label"], "orange", bar=spam_p)
     with c2:
-        metric_card("Toxicity flags", f"{len(result['categories'])} of {len(TOX_LABELS)}", "Categories above their limit", "t-red")
+        stat_card(
+            "☣️",
+            "Toxicity flags",
+            f"{len(result['categories'])} of {len(TOX_LABELS)}",
+            "Categories above their limit",
+            "red",
+            bar=len(result["categories"]) / len(TOX_LABELS),
+        )
     with c3:
-        metric_card("Strongest toxicity signal", pct(tox_values[top_label]["probability"]), pretty(top_label), "t-blue")
+        stat_card(
+            "🎯",
+            "Strongest toxicity signal",
+            pct(tox_values[top_label]["probability"]),
+            pretty(top_label),
+            "indigo",
+            bar=tox_values[top_label]["probability"],
+        )
 
     if result.get("with_insights"):
         render('<div class="sec-label">Insights</div>')
         render_insights(
-            result["explanation"],
+            result["explanation_data"],
             result["verdict"]["key"],
             result.get("rewrite"),
             result.get("rewrite_source"),
         )
 
     render('<div class="sec-label">Analysis breakdown</div>')
-    render('<div class="sec-note">How confident each detector is, and whether it crossed its safety limit.</div>')
+    render('<div class="sec-note">The shape shows how strongly each detector fired. Anything that reaches past the dashed line is flagged.</div>')
     render_breakdown(result)
 
     buffer = io.StringIO()
@@ -1077,7 +1276,7 @@ def render_single_result(result):
     )
 
 
-def render_row_detail(row):
+def render_row_detail(row, meta):
     key = val(row, "verdict_key", "error")
     level = LEVEL_BY_KEY.get(key, "warn")
     risk = float(val(row, "risk_score", 0.0))
@@ -1104,14 +1303,8 @@ def render_row_detail(row):
 
     render(f'<div class="quote"><small>Comment</small>{esc(val(row, "comment"))}</div>')
 
-    explanation = val(row, "explanation", "")
-    if explanation:
-        render_insights(
-            explanation,
-            key,
-            val(row, "friendly_rewrite", "") or None,
-            val(row, "rewrite_source", ""),
-        )
+    if meta:
+        render_insights(meta["expl"], key, meta.get("rewrite"), meta.get("source"))
 
 
 def pick_example(group):
@@ -1379,7 +1572,7 @@ with tab_batch:
             if subset.empty:
                 st.warning("No usable comments found in that column.")
             else:
-                rows = []
+                rows, metas = [], []
                 progress = st.progress(0.0, text="Starting...")
                 total = len(subset)
                 ai_used = 0
@@ -1394,6 +1587,13 @@ with tab_batch:
                             if res["rewrite_source"] == "AI rewrite":
                                 ai_used += 1
                         rows.append(flatten_result(res))
+                        metas.append(
+                            {
+                                "expl": res["explanation_data"],
+                                "rewrite": res.get("rewrite"),
+                                "source": res.get("rewrite_source"),
+                            }
+                        )
                     except Exception as error:
                         rows.append(
                             {
@@ -1405,16 +1605,19 @@ with tab_batch:
                                 "reason": str(error),
                             }
                         )
+                        metas.append(None)
 
                     progress.progress(i / total, text=f"Analyzed {i} of {total} comments")
 
                 progress.empty()
                 st.session_state["bulk_df"] = pd.DataFrame(rows)
+                st.session_state["bulk_meta"] = metas
 
     # ---- Step 3: results ----
     if "bulk_df" in st.session_state:
 
         out = st.session_state["bulk_df"]
+        metas = st.session_state.get("bulk_meta", [])
         counts = out["verdict_key"].value_counts()
         total = len(out)
 
@@ -1430,15 +1633,15 @@ with tab_batch:
 
         k1, k2, k3, k4, k5 = st.columns(5)
         with k1:
-            metric_card("Analyzed", f"{total:,}", "Comments", "t-blue")
+            stat_card("📊", "Analyzed", f"{total:,}", "Comments reviewed", "indigo")
         with k2:
-            metric_card("Clean", f"{clean_n:,}", f"{clean_n / total:.0%} of total", "t-green")
+            stat_card("✅", "Clean", f"{clean_n:,}", f"{clean_n / total:.0%} of total", "green", bar=clean_n / total)
         with k3:
-            metric_card("Needs attention", f"{attention_n:,}", f"{attention_n / total:.0%} of total", "t-amber")
+            stat_card("⚠️", "Needs attention", f"{attention_n:,}", f"{attention_n / total:.0%} of total", "amber", bar=attention_n / total)
         with k4:
-            metric_card("Spam", f"{spam_n:,}", f"{spam_n / total:.0%} of total", "t-orange")
+            stat_card("🚫", "Spam", f"{spam_n:,}", f"{spam_n / total:.0%} of total", "orange", bar=spam_n / total)
         with k5:
-            metric_card("Toxic", f"{toxic_n:,}", f"{toxic_n / total:.0%} of total", "t-red")
+            stat_card("☣️", "Toxic", f"{toxic_n:,}", f"{toxic_n / total:.0%} of total", "red", bar=toxic_n / total)
 
         st.write("")
         left, right = st.columns(2)
@@ -1561,7 +1764,8 @@ with tab_batch:
                 format_func=label_for,
                 label_visibility="collapsed",
             )
-            render_row_detail(out.loc[picked])
+            meta = metas[int(picked)] if int(picked) < len(metas) else None
+            render_row_detail(out.loc[picked], meta)
 
         # Downloads
         render('<div class="sec-label">Export</div>')
@@ -1662,6 +1866,11 @@ with tab_about:
             "It is the confidence of the strongest signal found in the comment, from 0% to 100%. "
             "A high score means at least one detector is very sure; the verdict still depends on each "
             "signal's own safety limit."
+        )
+    with st.expander("How do I read the signal radar?"):
+        st.write(
+            "Each corner is one detector. The coloured shape shows how strongly it fired, and the dashed line "
+            "marks its safety limit. When the shape reaches past the dashed line at a corner, that signal is flagged."
         )
     with st.expander("Where do the friendlier rewrites come from?"):
         st.write(
