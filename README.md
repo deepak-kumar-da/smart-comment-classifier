@@ -271,13 +271,6 @@ Optimizing category-specific thresholds improved every reported metric.
 | Insult | 0.80 |
 | Identity Hate | 0.60 |
 
-### Evaluation Evidence
-
-> Add plots and reports exported from the notebooks to [`docs/evaluation/`](docs/evaluation/).
-
-| Spam classifier | Toxicity classifier |
-|---|---|
-| ![Spam confusion matrix](docs/evaluation/spam_confusion_matrix.png) | ![Toxicity confusion matrix](docs/evaluation/toxicity_confusion_matrix.png) |
 
 
 ---
