@@ -445,59 +445,6 @@ div[data-testid="stDataFrame"] { border-radius: 14px; overflow: hidden; border: 
 .footer b { display: block; font-size: 15px; color: var(--ink); margin-bottom: 6px; }
 .footer span { font-size: 12.5px; color: #94a3b8; }
 
-/* ================= Visual refresh (restrained) ================= */
-
-/* Segmented tab control: one accent colour, clean and quiet */
-[role="tablist"] {
-    justify-content: center !important; gap: 4px !important; background: #ffffff !important;
-    border: 1px solid #e2e8f0 !important; border-radius: 14px !important; padding: 5px !important;
-    width: fit-content !important; margin: 0 auto 20px auto !important;
-    box-shadow: 0 2px 8px rgba(15,23,42,0.05) !important;
-}
-button[role="tab"] {
-    background: transparent !important; border: none !important; border-radius: 10px !important;
-    padding: 10px 22px !important; height: auto !important; color: #64748b !important;
-    box-shadow: none !important; transition: all .15s ease !important;
-}
-button[role="tab"] p { font-size: 14.5px !important; font-weight: 700 !important; margin: 0 !important; color: inherit !important; }
-button[role="tab"]:hover { background: #f1f5f9 !important; color: #0f172a !important; }
-button[role="tab"][aria-selected="true"] {
-    background: #4f46e5 !important; color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(79,70,229,0.30) !important;
-}
-[data-baseweb="tab-highlight"], [data-baseweb="tab-border"] { display: none !important; }
-[data-baseweb="tab-panel"] { padding-top: 10px !important; }
-
-/* Hero preview: calm, neutral window with small colour accents only for status */
-.mock-wrap { max-width: 860px; margin: 30px auto 8px auto; padding: 0 10px; }
-.mock {
-    background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; text-align: left;
-    box-shadow: 0 22px 54px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.04);
-}
-.mock-bar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-.mock-bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #cbd5e1; }
-.mock-url { margin-left: 12px; flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #64748b; }
-.mock-body { padding: 18px 20px 20px 20px; }
-.mock-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-.ms { background: #fff; border: 1px solid #eef2f7; border-left: 3px solid #cbd5e1; border-radius: 12px; padding: 10px 14px; }
-.ms b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.6px; color: #0f172a; line-height: 1.1; }
-.ms span { font-size: 11.5px; font-weight: 600; color: #64748b; }
-.ms-g { border-left-color: #22c55e; } .ms-o { border-left-color: #f97316; } .ms-r { border-left-color: #ef4444; } .ms-a { border-left-color: #f59e0b; }
-.mock-row { display: grid; grid-template-columns: 74px 1fr 140px 72px; gap: 12px; align-items: center; padding: 11px 12px; border-radius: 12px; border: 1px solid #eef2f7; margin-bottom: 8px; background: #fff; }
-.mp { font-size: 11.5px; font-weight: 800; padding: 5px 0; border-radius: 999px; text-align: center; }
-.mp.r { background: #fee2e2; color: #b91c1c; } .mp.o { background: #ffedd5; color: #c2410c; }
-.mp.g { background: #dcfce7; color: #15803d; } .mp.a { background: #fef3c7; color: #b45309; }
-.mc { font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mr { display: flex; align-items: center; gap: 8px; }
-.mbar { flex: 1; height: 6px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
-.mbar i { display: block; height: 100%; border-radius: 999px; }
-.mbar i.r { background: #ef4444; } .mbar i.o { background: #f97316; } .mbar i.g { background: #22c55e; } .mbar i.a { background: #f59e0b; }
-.mr b { font-size: 12px; color: #0f172a; width: 34px; text-align: right; }
-.ma { font-size: 12px; font-weight: 700; color: #0f172a; text-align: right; }
-.mock-sugg { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; font-size: 13px; color: #14532d; line-height: 1.55; }
-.mock-sugg b { display: block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #15803d; margin-bottom: 3px; }
-.mock-float { display: none; }
-
 @media (max-width: 860px) {
     .hero-title { font-size: 36px; letter-spacing: -1.2px; }
     .hero-sub { font-size: 16px; }
@@ -508,12 +455,6 @@ button[role="tab"][aria-selected="true"] {
     .verdict-title { font-size: 24px; }
     .bd-grid { grid-template-columns: 1fr; }
     .vrow { grid-template-columns: 1fr; gap: 2px; }
-    .mock-row { grid-template-columns: 70px 1fr; }
-    .mr, .ma { display: none; }
-    .mock-stats { grid-template-columns: repeat(2, 1fr); }
-    .mock-float { display: none; }
-    button[role="tab"] { padding: 10px 14px !important; }
-    button[role="tab"] p { font-size: 13px !important; }
 }
 </style>
 """,
@@ -1426,51 +1367,6 @@ render(
             <span>Spam and 6 toxicity signals</span>
             <span>Plain-English explanations</span>
             <span>Bulk CSV moderation</span>
-        </div>
-    </div>
-    """
-)
-
-render(
-    """
-    <div class="mock-wrap">
-        <div class="mock">
-            <div class="mock-bar"><i></i><i></i><i></i><div class="mock-url">Example moderation queue</div></div>
-            <div class="mock-body">
-                <div class="mock-stats">
-                    <div class="ms ms-g"><b>128</b><span>Clean</span></div>
-                    <div class="ms ms-o"><b>17</b><span>Spam</span></div>
-                    <div class="ms ms-r"><b>23</b><span>Toxic</span></div>
-                    <div class="ms ms-a"><b>6</b><span>Needs review</span></div>
-                </div>
-                <div class="mock-row">
-                    <span class="mp r">Toxic</span>
-                    <div class="mc">You are absolutely stupid and useless. Nobody wants to hear your nonsense.</div>
-                    <div class="mr"><div class="mbar"><i class="r" style="width:98%"></i></div><b>98%</b></div>
-                    <span class="ma">Remove</span>
-                </div>
-                <div class="mock-row">
-                    <span class="mp o">Spam</span>
-                    <div class="mc">WIN a FREE iPhone now!!! Click the link and claim your reward today</div>
-                    <div class="mr"><div class="mbar"><i class="o" style="width:99%"></i></div><b>99%</b></div>
-                    <span class="ma">Remove</span>
-                </div>
-                <div class="mock-row">
-                    <span class="mp a">Review</span>
-                    <div class="mc">Honestly this is the worst take I have seen, but I see your point.</div>
-                    <div class="mr"><div class="mbar"><i class="a" style="width:81%"></i></div><b>81%</b></div>
-                    <span class="ma">Check</span>
-                </div>
-                <div class="mock-row">
-                    <span class="mp g">Clean</span>
-                    <div class="mc">Great article, thanks for the clear explanation!</div>
-                    <div class="mr"><div class="mbar"><i class="g" style="width:3%"></i></div><b>3%</b></div>
-                    <span class="ma">Approve</span>
-                </div>
-                <div class="mock-sugg"><b>✨ Friendlier way to say it</b>
-                    I disagree with this. Could you explain your reasoning so we can talk it through respectfully?
-                </div>
-            </div>
         </div>
     </div>
     """
